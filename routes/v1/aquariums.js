@@ -1,5 +1,6 @@
 var express = require('express');
 var router = express.Router();
+var { body, validationResult } = require('express-validator');
 
 var Aquarium = require('../../models/aquariums');
 /**
@@ -21,24 +22,36 @@ router.get('/', async (req, res) => {
  * @description New aquarium
  * @access      Private
  */
-router.post('/', async (req, res) => {
-	try {
+router.post(
+	'/',
+	body('name', 'Name is required').not().isEmpty(),
+	body('shape', 'Shape is required').not().isEmpty(),
+	body('gallons', 'Gallons is required').isNumeric().not().isEmpty(),
+	async (req, res) => {
+		const errors = validationResult(req);
+
+		if (!errors.isEmpty()) {
+			return res.status(400).json({ errors: errors.array() });
+		}
+
 		const { name, shape, gallons } = req.body;
 
-		const aquarium = new Aquarium({
-			name,
-			shape,
-			gallons,
-		});
+		try {
+			const aquarium = new Aquarium({
+				name,
+				shape,
+				gallons,
+			});
 
-		await aquarium.save();
+			await aquarium.save();
 
-		res.status(200).send('Successfully added Aquarium!');
-	} catch (err) {
-		console.error('Server Error!');
-		res.status(500).send(err);
+			res.status(200).send('Successfully added Aquarium!');
+		} catch (err) {
+			console.error('Server Error!');
+			res.status(500).send(err);
+		}
 	}
-});
+);
 
 /**
  * @method      PUT
