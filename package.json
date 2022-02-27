@@ -3,7 +3,8 @@
 	"version": "0.0.0",
 	"private": true,
 	"scripts": {
-		"start": "nodemon -r dotenv/config app.ts"
+		"start": "npx ts-node app.ts",
+		"dev": "nodemon app.ts"
 	},
 	"dependencies": {
 		"bcrypt": "^5.0.1",
