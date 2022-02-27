@@ -1,8 +1,14 @@
-var express = require('express');
-var router = express.Router();
-var { body, validationResult } = require('express-validator');
+import express from 'express';
+import { body, validationResult } from 'express-validator';
+import Aquarium from '../../models/aquariums';
 
-var Aquarium = require('../../models/aquariums');
+const router: express.Router = express.Router();
+
+interface AquariumFields {
+	name: string;
+	shape: string;
+	gallons: number;
+}
 /**
  * @method      GET
  * @description Return aquarium/s.
@@ -31,17 +37,17 @@ router.post(
 		const errors = validationResult(req);
 
 		if (!errors.isEmpty()) {
-			return res.status(400).json({ errors: errors.array() });
+			return res.status(200).json({ errors: errors.array() });
 		}
 
 		const { name, shape, gallons } = req.body;
-
+		const aquariumField: AquariumFields = {
+			name,
+			shape,
+			gallons,
+		};
 		try {
-			const aquarium = new Aquarium({
-				name,
-				shape,
-				gallons,
-			});
+			const aquarium = new Aquarium(aquariumField);
 
 			await aquarium.save();
 
@@ -62,7 +68,7 @@ router.put('/:id', async (req, res) => {
 	try {
 		const { name, shape, gallons } = req.body;
 
-		const aquariumFields = {};
+		const aquariumFields: any = {};
 
 		if (name) aquariumFields.name = name;
 		if (shape) aquariumFields.shape = shape;
@@ -98,7 +104,7 @@ router.delete('/:id', async (req, res) => {
 			res.status(404).send('No data found.');
 		}
 
-		await Aquarium.findOneAndDelete(req.params.id);
+		await Aquarium.findOneAndDelete({ _id: req.params.id });
 
 		res.status(200).send('Successfully deleted aquarium.');
 	} catch (err) {
@@ -106,4 +112,4 @@ router.delete('/:id', async (req, res) => {
 	}
 });
 
-module.exports = router;
+export default router;
