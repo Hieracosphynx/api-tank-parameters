@@ -17,9 +17,9 @@ interface AquariumFields {
 router.get('/', async (req, res) => {
 	try {
 		const aquariums = await Aquarium.find();
-		res.status(200).send(aquariums);
+		return res.status(200).send(aquariums);
 	} catch (err) {
-		res.status(500).send('Server Error!');
+		return res.status(500).send('Server Error!');
 	}
 });
 
@@ -30,14 +30,16 @@ router.get('/', async (req, res) => {
  */
 router.post(
 	'/',
+
 	body('name', 'Name is required').not().isEmpty(),
 	body('shape', 'Shape is required').not().isEmpty(),
 	body('gallons', 'Gallons is required').isNumeric().not().isEmpty(),
+
 	async (req, res) => {
 		const errors = validationResult(req);
 
 		if (!errors.isEmpty()) {
-			return res.status(200).json({ errors: errors.array() });
+			return res.status(200).send({ errors: errors.array() });
 		}
 
 		const { name, shape, gallons } = req.body;
@@ -51,10 +53,10 @@ router.post(
 
 			await aquarium.save();
 
-			res.status(200).send('Successfully added Aquarium!');
+			return res.status(200).send('Successfully added Aquarium!');
 		} catch (err) {
 			console.error('Server Error!');
-			res.status(500).send(err);
+			return res.status(500).send(err);
 		}
 	}
 );
@@ -77,7 +79,7 @@ router.put('/:id', async (req, res) => {
 		let aquarium = await Aquarium.findById(req.params.id);
 
 		if (!aquarium) {
-			res.status(404).send('No data found.');
+			return res.status(404).send('No data found.');
 		}
 
 		aquarium = await Aquarium.findByIdAndUpdate(
@@ -85,9 +87,9 @@ router.put('/:id', async (req, res) => {
 			{ $set: aquariumFields },
 			{ new: true }
 		);
-		res.status(200).send('Successfully updated aquarium!');
+		return res.status(200).send('Successfully updated aquarium!');
 	} catch (err) {
-		res.status(500).send('Server Error!');
+		return res.status(500).send('Server Error!');
 	}
 });
 
@@ -101,14 +103,14 @@ router.delete('/:id', async (req, res) => {
 		const aquarium = await Aquarium.findById(req.params.id);
 
 		if (!aquarium) {
-			res.status(404).send('No data found.');
+			return res.status(404).send('No data found.');
 		}
 
 		await Aquarium.findOneAndDelete({ _id: req.params.id });
 
-		res.status(200).send('Successfully deleted aquarium.');
+		return res.status(200).send('Successfully deleted aquarium.');
 	} catch (err) {
-		res.status(500).send('Server Error!');
+		return res.status(500).send('Server Error!');
 	}
 });
 
