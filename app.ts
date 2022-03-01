@@ -2,6 +2,7 @@ import express from 'express';
 import 'dotenv/config';
 import AquariumRoutes from './routes/v1/aquariums';
 import UserRoutes from './routes/v1/users';
+import AuthRoutes from './routes/v1/auth';
 import ConnectDB from './config/db';
 
 ConnectDB();
@@ -12,6 +13,7 @@ app.use(express.json());
 
 app.use('/v1/aquariums', AquariumRoutes);
 app.use('/v1/users', UserRoutes);
+app.use('/v1/auth', AuthRoutes);
 
 const port = process.env.PORT || 5000;
 

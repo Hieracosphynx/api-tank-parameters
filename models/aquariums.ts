@@ -1,12 +1,17 @@
-import mongoose from 'mongoose';
+import { Schema, model } from 'mongoose';
 
 interface Aquarium {
+	ownerId: Schema.Types.ObjectId;
 	name: string;
 	shape: string;
 	gallons: number;
 }
 
-const AquariumSchema = new mongoose.Schema<Aquarium>({
+const AquariumSchema = new Schema<Aquarium>({
+	ownerId: {
+		type: Schema.Types.ObjectId,
+		ref: 'user',
+	},
 	name: { type: String, required: true },
 	shape: {
 		type: String,
@@ -18,5 +23,5 @@ const AquariumSchema = new mongoose.Schema<Aquarium>({
 	},
 });
 
-const AquariumModel = mongoose.model<Aquarium>('aquarium', AquariumSchema);
+const AquariumModel = model<Aquarium>('aquarium', AquariumSchema);
 export default AquariumModel;
