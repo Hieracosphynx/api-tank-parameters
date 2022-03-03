@@ -1,6 +1,7 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import argon2 from 'argon2';
+import { body, validationResult } from 'express-validator';
 import User, { UserInterface } from '../../models/users';
 
 import 'dotenv/config';
@@ -23,53 +24,66 @@ router.get('/', async (req, res) => {
  * @description Log in user
  * @access public
  */
-router.post('/login', async (req, res) => {
-	type VerifyPassword = boolean;
+router.post(
+	'/login',
+	body('username', 'Username is required').not().isEmpty(),
+	body('password', 'Password is required').not().isEmpty(),
+	async (req: express.Request, res: express.Response) => {
+		const errors = validationResult(req);
 
-	try {
-		const { username, password } = req.body;
-
-		const user = await User.findOne({ username });
-		if (!user) {
-			return res.status(200).send({
-				message: 'Either username and password is incorrect',
-			});
+		if (!errors.isEmpty()) {
+			return res.status(200).send({ errors: errors.array() });
 		}
 
-		const verifyPassword: VerifyPassword = await argon2.verify(
-			user.password,
-			password
-		);
+		type VerifyPassword = boolean;
 
-		if (!verifyPassword) {
-			return res.status(401).send({
-				message: 'Either username or password is incorrect.',
-			});
-		}
+		try {
+			const { username, password } = req.body;
 
-		const userPayload: UserInterface = {
-			userId: user._id,
-			username: user.username,
-		};
-
-		jwt.sign(
-			userPayload,
-			process.env.TOKEN_SECRET!,
-			{
-				expiresIn: 36000,
-			},
-			(err, token) => {
-				console.log(err);
-				if (err) throw err;
-				return res.status(200).json({ token });
+			const user = await User.findOne({ username });
+			if (!user) {
+				return res.status(200).send({
+					message: 'Either username and password is incorrect',
+				});
 			}
-		);
-	} catch (err) {
-		console.error('Something went wrong');
-		return res.status(500).send({
-			message: 'Server Error',
-		});
+
+			const verifyPassword: VerifyPassword = await argon2.verify(
+				user.password,
+				password
+			);
+
+			if (!verifyPassword) {
+				return res.status(401).send({
+					message: 'Either username or password is incorrect.',
+				});
+			}
+
+			const userPayload: UserInterface = {
+				userId: user._id,
+				username: user.username,
+			};
+
+			jwt.sign(
+				{
+					user: userPayload,
+				},
+				process.env.TOKEN_SECRET!,
+				{
+					expiresIn: 36000,
+				},
+				(err, token) => {
+					console.log(err);
+					if (err) throw err;
+					return res.status(200).json({ token });
+				}
+			);
+		} catch (err) {
+			console.error('Something went wrong');
+			return res.status(500).send({
+				message: 'Server Error',
+			});
+		}
 	}
-});
+);
 
 export default router;

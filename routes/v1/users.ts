@@ -12,7 +12,7 @@ interface UserFields {
 }
 
 /* GET users listing. */
-router.get('/', function (req, res, next) {
+router.get('/', function (req: express.Request, res: express.Response) {
 	res.send('respond with a resource');
 });
 
@@ -33,7 +33,7 @@ router.post(
 		.not()
 		.isEmpty(),
 
-	async (req, res) => {
+	async (req: express.Request, res: express.Response) => {
 		const errors = validationResult(req);
 
 		if (!errors.isEmpty()) {

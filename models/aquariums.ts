@@ -11,6 +11,7 @@ const AquariumSchema = new Schema<Aquarium>({
 	ownerId: {
 		type: Schema.Types.ObjectId,
 		ref: 'user',
+		required: true,
 	},
 	name: { type: String, required: true },
 	shape: {

@@ -1,10 +1,13 @@
 import express from 'express';
 import { body, validationResult } from 'express-validator';
+import { AuthRequest } from '../../compiler/types';
 import Aquarium from '../../models/aquariums';
+import auth from '../../middleware/auth';
 
 const router: express.Router = express.Router();
 
 interface AquariumFields {
+	ownerId: string;
 	name: string;
 	shape: string;
 	gallons: number;
@@ -14,9 +17,11 @@ interface AquariumFields {
  * @description Return aquarium/s.
  * @access      Private
  */
-router.get('/', async (req, res) => {
+router.get('/', [auth], async (req: AuthRequest, res: express.Response) => {
 	try {
-		const aquariums = await Aquarium.find();
+		const { userId } = req.user;
+		console.log(userId);
+		const aquariums = await Aquarium.find({ ownerId: userId });
 		return res.status(200).send(aquariums);
 	} catch (err) {
 		return res.status(500).send('Server Error!');
@@ -30,20 +35,21 @@ router.get('/', async (req, res) => {
  */
 router.post(
 	'/',
-
-	body('name', 'Name is required').not().isEmpty(),
-	body('shape', 'Shape is required').not().isEmpty(),
-	body('gallons', 'Gallons is required').isNumeric().not().isEmpty(),
-
-	async (req, res) => {
+	[
+		auth,
+		body('name', 'Name is required').not().isEmpty(),
+		body('shape', 'Shape is required').not().isEmpty(),
+		body('gallons', 'Gallons is required').isNumeric().not().isEmpty(),
+	],
+	async (req: AuthRequest, res: express.Response) => {
 		const errors = validationResult(req);
-
 		if (!errors.isEmpty()) {
 			return res.status(200).send({ errors: errors.array() });
 		}
-
+		const { userId } = req.user;
 		const { name, shape, gallons } = req.body;
 		const aquariumField: AquariumFields = {
+			ownerId: userId,
 			name,
 			shape,
 			gallons,
@@ -66,52 +72,60 @@ router.post(
  * @description Update aquarium
  * @access      Private
  */
-router.put('/:id', async (req, res) => {
-	try {
-		const { name, shape, gallons } = req.body;
+router.put(
+	'/:id',
+	[auth],
+	async (req: express.Request, res: express.Response) => {
+		try {
+			const { name, shape, gallons } = req.body;
 
-		const aquariumFields: any = {};
+			const aquariumFields: any = {};
 
-		if (name) aquariumFields.name = name;
-		if (shape) aquariumFields.shape = shape;
-		if (gallons) aquariumFields.gallons = gallons;
+			if (name) aquariumFields.name = name;
+			if (shape) aquariumFields.shape = shape;
+			if (gallons) aquariumFields.gallons = gallons;
 
-		let aquarium = await Aquarium.findById(req.params.id);
+			let aquarium = await Aquarium.findById(req.params.id);
 
-		if (!aquarium) {
-			return res.status(404).send('No data found.');
+			if (!aquarium) {
+				return res.status(404).send('No data found.');
+			}
+
+			aquarium = await Aquarium.findByIdAndUpdate(
+				req.params.id,
+				{ $set: aquariumFields },
+				{ new: true }
+			);
+			return res.status(200).send('Successfully updated aquarium!');
+		} catch (err) {
+			return res.status(500).send('Server Error!');
 		}
-
-		aquarium = await Aquarium.findByIdAndUpdate(
-			req.params.id,
-			{ $set: aquariumFields },
-			{ new: true }
-		);
-		return res.status(200).send('Successfully updated aquarium!');
-	} catch (err) {
-		return res.status(500).send('Server Error!');
 	}
-});
+);
 
 /**
  * @method      DELETE
  * @description Delete aquarium
  * @access      Private
  */
-router.delete('/:id', async (req, res) => {
-	try {
-		const aquarium = await Aquarium.findById(req.params.id);
+router.delete(
+	'/:id',
+	[auth],
+	async (req: express.Request, res: express.Response) => {
+		try {
+			const aquarium = await Aquarium.findById(req.params.id);
 
-		if (!aquarium) {
-			return res.status(404).send('No data found.');
+			if (!aquarium) {
+				return res.status(404).send('No data found.');
+			}
+
+			await Aquarium.findOneAndDelete({ _id: req.params.id });
+
+			return res.status(200).send('Successfully deleted aquarium.');
+		} catch (err) {
+			return res.status(500).send('Server Error!');
 		}
-
-		await Aquarium.findOneAndDelete({ _id: req.params.id });
-
-		return res.status(200).send('Successfully deleted aquarium.');
-	} catch (err) {
-		return res.status(500).send('Server Error!');
 	}
-});
+);
 
 export default router;
