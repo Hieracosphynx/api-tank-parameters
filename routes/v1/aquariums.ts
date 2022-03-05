@@ -1,6 +1,6 @@
 import express from 'express';
 import { body, validationResult } from 'express-validator';
-import { AuthRequest } from '../../compiler/types';
+import { AuthRequest } from '../../common/types';
 import Aquarium from '../../models/aquariums';
 import auth from '../../middleware/auth';
 

@@ -1,6 +1,6 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
-import { AuthRequest } from '../compiler/types';
+import { AuthRequest } from '../common/types';
 
 const AuthMiddleware = async (
 	req: AuthRequest,
