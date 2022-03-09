@@ -1,4 +1,5 @@
 import express from 'express';
+import cors from 'cors';
 import 'dotenv/config';
 import AquariumRoutes from './routes/v1/aquariums';
 import UserRoutes from './routes/v1/users';
@@ -10,6 +11,7 @@ ConnectDB();
 
 const app: express.Application = express();
 
+app.use(cors());
 app.use(express.json());
 
 app.use('/v1/aquariums', AquariumRoutes);

@@ -10,6 +10,7 @@ interface AquariumFields {
 	ownerId: string;
 	name: string;
 	shape: string;
+	habitat: string;
 	gallons: number;
 }
 /**
@@ -40,6 +41,7 @@ router.post(
 		body('name', 'Name is required').not().isEmpty(),
 		body('shape', 'Shape is required').not().isEmpty(),
 		body('gallons', 'Gallons is required').isNumeric().not().isEmpty(),
+		body('habitat', 'Habitat is required').not().isEmpty(),
 	],
 	async (req: AuthRequest, res: express.Response) => {
 		const errors = validationResult(req);
@@ -47,11 +49,12 @@ router.post(
 			return res.status(200).send({ errors: errors.array() });
 		}
 		const { userId } = req.user;
-		const { name, shape, gallons } = req.body;
+		const { name, shape, gallons, habitat } = req.body;
 		const aquariumField: AquariumFields = {
 			ownerId: userId,
 			name,
 			shape,
+			habitat,
 			gallons,
 		};
 		try {
@@ -77,13 +80,14 @@ router.put(
 	[auth],
 	async (req: express.Request, res: express.Response) => {
 		try {
-			const { name, shape, gallons } = req.body;
+			const { name, shape, gallons, habitat } = req.body;
 
 			const aquariumFields: any = {};
 
 			if (name) aquariumFields.name = name;
 			if (shape) aquariumFields.shape = shape;
 			if (gallons) aquariumFields.gallons = gallons;
+			if (habitat) aquariumFields.habitat = habitat;
 
 			let aquarium = await Aquarium.findById(req.params.id);
 
